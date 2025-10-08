@@ -1,20 +1,32 @@
-# Dockerfile для Nuxt 3
-FROM node:20.14.0
+# Этап сборки
+FROM node:18-alpine AS build
 
-# Рабочая директория
 WORKDIR /app
 
-# Копируем package.json и package-lock.json
-COPY package*.json ./
-
 # Устанавливаем зависимости
+COPY package*.json ./
 RUN npm install
 
-# Копируем остальное
+# Копируем проект
 COPY . .
 
-# Открываем порт
+# Собираем Nuxt
+RUN npm run build
+
+# Этап запуска (чистый контейнер без dev-зависимостей)
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Копируем только нужное из build-образа
+COPY --from=build /app/.output ./.output
+COPY --from=build /app/package*.json ./
+
+# Ставим только production зависимости
+RUN npm install --omit=dev
+
+# Экспонируем порт Nuxt
 EXPOSE 3000
 
-# Команда по умолчанию
-CMD ["npm", "run", "dev"]
+# Запуск
+CMD ["node", ".output/server/index.mjs"]
