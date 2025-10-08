@@ -32,11 +32,7 @@ services:
     build:
       context: ./nuxt-app
       dockerfile: Dockerfile
-    volumes:
-      - ./nuxt-app:/app
-    ports:
-      - "3000:3000" # наружу → 3000
-    command: "npm run dev"
+    command: "node .output/server/index.mjs"
     networks:
       - appnet
     environment:
